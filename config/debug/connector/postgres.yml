@@ -1,0 +1,14 @@
+connector:
+  postgres:
+    name: postgres
+    type: database
+    engine: postgresql
+    host: ${oc.env:DB_POSTGRES_HOST,""}
+    port: ${oc.env:DB_POSTGRES_PORT,5432}
+    timeout: 5
+    pool:
+      max: 5
+    auth:
+      type: basic
+      username: ${oc.env:DB_POSTGRES_USERNAME,""}
+      password: ${oc.env:DB_POSTGRES_PASSWORD,""}

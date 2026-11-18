@@ -1,0 +1,9 @@
+connector:
+  ciqual:
+    name: ciqual
+    type: api
+    base_url: ${oc.env:CIQUAL_DATASET_URL,""}
+    timeout: 120
+    retry: 3
+    auth:
+      type: none

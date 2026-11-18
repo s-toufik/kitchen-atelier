@@ -1,0 +1,12 @@
+connector:
+  mongodb:
+    name: mongodb
+    type: database
+    engine: mongodb
+    host: ${oc.env:DB_MONGO_HOST,""}
+    port: ${oc.env:DB_MONGO_PORT,27017}
+    timeout: 3
+    auth:
+      type: basic
+      username: ${oc.env:DB_MONGO_USERNAME,""}
+      password: ${oc.env:DB_MONGO_PASSWORD,""}

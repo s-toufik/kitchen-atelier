@@ -1,0 +1,22 @@
+application_configuration:
+  env: ${oc.env:APP_ENV,debug}
+  run: async
+  log: ${oc.env:LOG_LEVEL,INFO}
+
+  server:
+    asgi:
+      kitchen-atelier: ${server.kitchen-atelier}
+
+  connector:
+    database:
+      postgres: ${connector.postgres}
+      mongodb: ${connector.mongodb}
+    telemetry:
+      open_telemetry: ${connector.telemetry}
+    api:
+      ciqual: ${connector.ciqual}
+
+  operation:
+    ingredients: ${operation.ingredients}
+    recipes: ${operation.recipes}
+    refresh_ciqual: ${operation.refresh_ciqual}

@@ -1,0 +1,8 @@
+server:
+  kitchen-atelier:
+    name: kitchen-atelier
+    type: asgi
+    base_path: ${oc.env:WEB_BASE_PATH,""}
+    docs: ${oc.env:WEB_DOCS,false}
+    cors_origins: ["*"]
+    parameters: {}

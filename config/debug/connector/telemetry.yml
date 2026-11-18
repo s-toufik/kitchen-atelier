@@ -1,0 +1,8 @@
+connector:
+  telemetry:
+    name: OpenTelemetry
+    type: telemetry
+    host: ${oc.env:OTEL_HOST,null}
+    port: ${oc.env:OTEL_PORT,null}
+    auth:
+      type: none

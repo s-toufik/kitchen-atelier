@@ -1,0 +1,17 @@
+operation:
+  recipes:
+    name: recipes
+    type: database
+    connector: ${connector.mongodb}
+    database: ${oc.env:DB_MONGO_DATABASE,kitchen}
+    collections:
+      recipes: recipes
+      versions: recipe_versions
+
+  refresh_ciqual:
+    name: refresh_ciqual
+    type: api
+    connector: ${connector.ciqual}
+    endpoint: ""
+    method: GET
+    parameters: {}

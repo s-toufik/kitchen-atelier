@@ -1,0 +1,9 @@
+operation:
+  ingredients:
+    name: ingredients
+    type: database
+    connector: ${connector.postgres}
+    database: ${oc.env:DB_POSTGRES_NAME,homelab}
+    parameters:
+      schema: kitchen
+      table: ingredients

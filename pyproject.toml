@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kitchen-atelier"
+version = "0.1.0"
+authors = [
+    { name = "Toufik Saouchi", email = "toufik.saouchi@gmail.com" },
+]
+description = "Recipe and nutrition studio -- versioned recipes in MongoDB, a French ingredient/macro catalog in PostgreSQL"
+readme = "Readme.md"
+requires-python = ">=3.14"
+keywords = ["recipes", "nutrition", "ciqual", "fastapi", "mongodb", "postgresql", "asyncio"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+    "Private :: Do Not Upload",
+]
+license = "MIT"
+dependencies = [
+    "granian",
+    "uvloop",
+    "fastapi",
+    "pycraftcore[application_configuration,http,logger,repository,resilient_http,retry,telemetry,web_fastapi]>=6.0.0",
+    "pydantic>=2",
+    "python-dotenv",
+    "pymongo",
+    "httpx",
+    "opentelemetry-instrumentation-fastapi>=0.66b2",
+]
+
+[project.scripts]
+kitchen-atelier-refresh-ingredients = "bootstrap.application.jobs.refresh_ingredients:main"
+
+[dependency-groups]
+dev = [
+    "starlette",
+    "uvicorn",
+    "asgi-lifespan",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov>=7.1.0",
+    "pytest-xdist>=3.6.0",
+    "hypothesis>=6.151.9",
+    "Faker",
+    "ruff",
+    "ty",
+    "pre-commit",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+#[tool.uv.sources]
+#pycraftcore = { path = "../pycraftcore", editable = true }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "I"]
+ignore = [
+    "E501",   # line length, handled by the formatter
+    "BLE001", # blind exception, deliberate at adapter boundaries
+]
+
+[tool.ty.src]
+include = ["src"]
+exclude = [".venv", "tests"]
+
+[project.urls]
+Homepage = "https://github.com/s-toufik/kitchen-atelier"
+Repository = "https://github.com/s-toufik/kitchen-atelier"
+Issues = "https://github.com/s-toufik/kitchen-atelier/issues"

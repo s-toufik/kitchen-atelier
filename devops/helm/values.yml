@@ -1,0 +1,85 @@
+replicas: 1
+
+ports:
+  - name: http
+    port: 8002
+    hostPort: 8002
+
+env:
+  APP_ENV: deploy
+  LOG_LEVEL: INFO
+  DEPLOYMENT_ENVIRONMENT: homelab
+  OTEL_HOST: otel-collector
+  OTEL_PORT: "4317"
+  DB_POSTGRES_HOST: postgres-rw
+  DB_POSTGRES_PORT: "5432"
+  DB_POSTGRES_NAME: homelab
+  DB_MONGO_HOST: mongodb
+  DB_MONGO_PORT: "27017"
+  DB_MONGO_DATABASE: kitchen
+  CIQUAL_DATASET_URL: "https://www.data.gouv.fr/fr/datasets/r/REPLACE-WITH-REAL-RESOURCE-ID"
+secretEnv:
+  DB_POSTGRES_USERNAME: { secret: pg-role-kitchen-atelier, key: username }
+  DB_POSTGRES_PASSWORD: { secret: pg-role-kitchen-atelier, key: password }
+  DB_MONGO_USERNAME: { secret: mongodb, key: username }
+  DB_MONGO_PASSWORD: { secret: mongodb, key: password }
+
+probes:
+  startup:
+    httpGet:
+      path: /actuator/health
+      port: http
+      httpHeaders: [{ name: Host, value: "kitchen-atelier:8002" }]
+    periodSeconds: 5
+    failureThreshold: 36
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+      httpHeaders: [{ name: Host, value: "kitchen-atelier:8002" }]
+    periodSeconds: 10
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+      httpHeaders: [{ name: Host, value: "kitchen-atelier:8002" }]
+    periodSeconds: 20
+    failureThreshold: 6
+
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { cpu: "500m", memory: 384Mi }
+
+podAnnotations:
+  homelab.io/logs: otlp
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+
+cronJobs:
+  refresh-ingredients:
+    schedule: "0 4 * * 1"
+    command: [kitchen-atelier-refresh-ingredients]
+    env:
+      APP_ENV: deploy
+      LOG_LEVEL: INFO
+      DEPLOYMENT_ENVIRONMENT: homelab
+      OTEL_HOST: otel-collector
+      OTEL_PORT: "4317"
+      DB_POSTGRES_HOST: postgres-rw
+      DB_POSTGRES_PORT: "5432"
+      DB_POSTGRES_NAME: homelab
+      DB_MONGO_HOST: mongodb
+      DB_MONGO_PORT: "27017"
+      DB_MONGO_DATABASE: kitchen
+      CIQUAL_DATASET_URL: "https://www.data.gouv.fr/fr/datasets/r/REPLACE-WITH-REAL-RESOURCE-ID"
+    secretEnv:
+      DB_POSTGRES_USERNAME: { secret: pg-role-kitchen-atelier, key: username }
+      DB_POSTGRES_PASSWORD: { secret: pg-role-kitchen-atelier, key: password }
+      DB_MONGO_USERNAME: { secret: mongodb, key: username }
+      DB_MONGO_PASSWORD: { secret: mongodb, key: password }
+    resources:
+      requests: { cpu: 50m, memory: 128Mi }
+      limits: { memory: 384Mi }
