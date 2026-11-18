@@ -6,8 +6,6 @@ from kitchen_atelier.domain.recipe.recipe_version import RecipeVersion
 
 @dataclass(frozen=True, slots=True)
 class Recipe:
-    """The header a recipe's versions hang off of. The versions hold the real content."""
-
     id: str
     title: str
     current_version_number: int

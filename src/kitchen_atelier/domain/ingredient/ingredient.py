@@ -13,15 +13,12 @@ _NON_NEGATIVE_FIELDS: tuple[str, ...] = (
 
 
 def normalize_search(name: str) -> str:
-    """Accent/case-insensitive key so 'crème' and 'creme' both match a search for 'creme'."""
     folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
     return folded.strip().lower()
 
 
 @dataclass(frozen=True, slots=True)
 class Ingredient:
-    """A catalog entry: macros per 100g for one French ingredient, usually from CIQUAL."""
-
     ciqual_code: str
     name_fr: str
     name_search: str

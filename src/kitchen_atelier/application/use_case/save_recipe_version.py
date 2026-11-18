@@ -8,8 +8,6 @@ from kitchen_atelier.domain.recipe.recipe_version import RecipeVersion
 
 
 class SaveRecipeVersion:
-    """Appends the next version. Refuses to save over a version that is no longer the latest."""
-
     def __init__(self, repository: RecipeRepository) -> None:
         self._repository = repository
 

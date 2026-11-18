@@ -13,8 +13,6 @@ _COLUMNS: str = (
 
 
 class SqlIngredientRepository:
-    """Reads and writes `kitchen.ingredients` in the shared `homelab` Postgres database."""
-
     def __init__(self, repository: AsyncRepository) -> None:
         self._repository = repository
 
@@ -34,11 +32,6 @@ class SqlIngredientRepository:
         return _to_ingredient(rows[0]) if rows else None
 
     async def upsert_many(self, ingredients: Iterable[Ingredient]) -> int:
-        """Upserts one row at a time -- this runs as a weekly batch job over ~3000 rows,
-        so clarity matters more here than shaving round trips. The WHERE clause on the
-        UPDATE makes an unchanged row a true no-op, so only rows that actually changed
-        (inserted or updated) are returned and counted.
-        """
         changed = 0
         for ingredient in ingredients:
             rows = await self._repository.execute(

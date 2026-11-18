@@ -17,19 +17,10 @@ _MISSING_VALUES: frozenset[str] = frozenset({"", "-", "traces"})
 
 
 class CiqualFormatError(Exception):
-    """The downloaded CIQUAL file doesn't look like the table this parser understands."""
+    pass
 
 
 def parse_ciqual_csv(raw_text: str, fetched_at: datetime) -> list[Ingredient]:
-    """Parses the ANSES CIQUAL bulk export (semicolon-delimited, French decimal commas).
-
-    Matches columns by lowercase substring rather than an exact header string: CIQUAL's
-    published headers are long and carry the measurement method/unit in the text itself
-    (e.g. "Energie, Règlement UE N° 1169/2011 (kcal/100 g)"), and have changed wording
-    across releases. A row with an unparsable macro value defaults that macro to 0 rather
-    than dropping the whole row -- this is a public, occasionally inconsistent dataset,
-    not a hard validation boundary.
-    """
     reader = csv.reader(StringIO(raw_text), delimiter=DELIMITER)
     try:
         header = next(reader)

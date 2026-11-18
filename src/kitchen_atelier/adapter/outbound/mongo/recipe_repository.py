@@ -13,14 +13,6 @@ from kitchen_atelier.domain.recipe.recipe_version import RecipeVersion
 
 
 class MongoRecipeRepository:
-    """Recipes and their version history, in the shared MongoDB instance's `kitchen` database.
-
-    Uses pymongo's collections directly (wrapped in `asyncio.to_thread`) rather than the
-    generic JSON-command `AsyncRepository.execute()` interface -- the richer document
-    operations here (upserts, sorted queries) read far more plainly this way, which is
-    the same choice agent-runtime makes for its own MongoDB-backed checkpointer.
-    """
-
     def __init__(self, client: MongoClient, database: str, recipes: str, versions: str) -> None:
         db = client[database]
         self._recipes = db[recipes]

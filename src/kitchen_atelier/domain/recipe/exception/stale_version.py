@@ -1,10 +1,4 @@
 class StaleVersion(Exception):
-    """Raised when saving a draft whose base version is no longer the recipe's latest.
-
-    Someone else (or another tab) saved a newer version first; the caller should reload
-    the latest version and re-apply its edits rather than overwriting history.
-    """
-
     def __init__(self, recipe_id: str, expected_version_number: int, latest_version_number: int) -> None:
         super().__init__(
             f"recipe {recipe_id!r}: draft was based on version {expected_version_number} "

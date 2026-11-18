@@ -2,8 +2,6 @@ from enum import StrEnum
 
 
 class Unit(StrEnum):
-    """European units only -- no cups, ounces or pounds."""
-
     GRAM = "g"
     KILOGRAM = "kg"
     MILLILITER = "ml"

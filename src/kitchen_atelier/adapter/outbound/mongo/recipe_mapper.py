@@ -99,5 +99,4 @@ def _line_from_document(document: dict[str, Any]) -> IngredientLine:
 
 
 def _aware(value: Any) -> Any:
-    """pymongo returns naive UTC datetimes by default; reattach the tzinfo on the way out."""
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value

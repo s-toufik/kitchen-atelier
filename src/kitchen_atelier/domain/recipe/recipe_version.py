@@ -10,12 +10,6 @@ __all__ = ["RecipeVersion", "RecipeDraft", "Sensory", "Step"]
 
 @dataclass(frozen=True, slots=True)
 class RecipeVersion:
-    """An immutable snapshot of a recipe's full card at the moment it was saved.
-
-    Versions are never edited in place: saving always appends the next version number,
-    and switching the version selector just renders an already-saved snapshot.
-    """
-
     recipe_id: str
     version_number: int
     saved_at: datetime
@@ -41,5 +35,4 @@ class RecipeVersion:
         return self.draft.scaled_ingredients(portions)
 
     def next_draft(self) -> RecipeDraft:
-        """A starting point for editing: the same content, pre-filled for a new save."""
         return replace(self.draft)

@@ -7,17 +7,10 @@ from pycraftcore.logger.port import Logger
 from kitchen_atelier.adapter.outbound.ciqual.ciqual_parser import parse_ciqual_csv
 from kitchen_atelier.domain.ingredient.ingredient import Ingredient
 
-# ANSES publishes CIQUAL as UTF-8 with a BOM on data.gouv.fr; cp1252 covers older mirrors.
 _ENCODINGS: tuple[str, ...] = ("utf-8-sig", "cp1252")
 
 
 class CiqualSource:
-    """Downloads the free ANSES CIQUAL bulk CSV export and parses it.
-
-    There is no live CIQUAL API -- this fetches the whole published table on each call,
-    which is fine for a weekly refresh job, not for a per-ingredient lookup.
-    """
-
     def __init__(self, connector: ApiConnector, logger: Logger) -> None:
         self._connector = connector
         self._logger = logger

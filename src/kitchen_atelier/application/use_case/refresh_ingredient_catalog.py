@@ -7,8 +7,6 @@ from kitchen_atelier.application.port.outbound.ingredient_source_port import Ing
 
 
 class RefreshIngredientCatalog:
-    """Re-fetches the source catalog (CIQUAL) and upserts it. Run by the scheduled job."""
-
     def __init__(
         self, source: IngredientSource, repository: IngredientRepository, logger: Logger
     ) -> None:
