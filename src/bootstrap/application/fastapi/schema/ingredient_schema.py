@@ -10,6 +10,7 @@ class IngredientSchema(BaseModel):
     protein_per_100g: float
     carb_per_100g: float
     fat_per_100g: float
+    source: str
 
     @classmethod
     def from_domain(cls, ingredient: Ingredient) -> IngredientSchema:
@@ -20,6 +21,7 @@ class IngredientSchema(BaseModel):
             protein_per_100g=ingredient.protein_per_100g,
             carb_per_100g=ingredient.carb_per_100g,
             fat_per_100g=ingredient.fat_per_100g,
+            source=ingredient.source,
         )
 
 

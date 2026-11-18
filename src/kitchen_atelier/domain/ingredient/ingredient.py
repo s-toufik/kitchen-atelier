@@ -2,8 +2,6 @@ import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
 
-CIQUAL_SOURCE: str = "ciqual"
-
 _NON_NEGATIVE_FIELDS: tuple[str, ...] = (
     "kcal_per_100g",
     "protein_per_100g",
@@ -37,27 +35,3 @@ class Ingredient:
         for field_name in _NON_NEGATIVE_FIELDS:
             if getattr(self, field_name) < 0:
                 raise ValueError(f"ingredient {self.name_fr!r}: {field_name} must be 0 or more")
-
-    @classmethod
-    def from_ciqual_row(
-        cls,
-        *,
-        ciqual_code: str,
-        name_fr: str,
-        kcal_per_100g: float,
-        protein_per_100g: float,
-        carb_per_100g: float,
-        fat_per_100g: float,
-        updated_at: datetime,
-    ) -> Ingredient:
-        return cls(
-            ciqual_code=ciqual_code,
-            name_fr=name_fr,
-            name_search=normalize_search(name_fr),
-            kcal_per_100g=kcal_per_100g,
-            protein_per_100g=protein_per_100g,
-            carb_per_100g=carb_per_100g,
-            fat_per_100g=fat_per_100g,
-            source=CIQUAL_SOURCE,
-            updated_at=updated_at,
-        )

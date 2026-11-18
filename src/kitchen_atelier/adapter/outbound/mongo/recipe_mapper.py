@@ -12,6 +12,7 @@ def recipe_to_document(recipe: Recipe) -> dict[str, Any]:
     return {
         "_id": recipe.id,
         "title": recipe.title,
+        "course": recipe.course,
         "current_version_number": recipe.current_version_number,
         "created_at": recipe.created_at,
         "updated_at": recipe.updated_at,
@@ -22,6 +23,7 @@ def recipe_from_document(document: dict[str, Any]) -> Recipe:
     return Recipe(
         id=document["_id"],
         title=document["title"],
+        course=document["course"],
         current_version_number=document["current_version_number"],
         created_at=_aware(document["created_at"]),
         updated_at=_aware(document["updated_at"]),
