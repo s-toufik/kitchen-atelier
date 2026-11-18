@@ -1,8 +1,33 @@
 from collections.abc import Iterable
+from datetime import UTC, datetime
 
-from kitchen_atelier.domain.ingredient.ingredient import Ingredient
+from kitchen_atelier.domain.ingredient.ingredient import Ingredient, normalize_search
 from kitchen_atelier.domain.recipe.recipe import Recipe
 from kitchen_atelier.domain.recipe.recipe_version import RecipeVersion
+
+
+def make_ingredient(
+    ciqual_code: str = "1",
+    name_fr: str = "Riz",
+    *,
+    kcal_per_100g: float = 130,
+    protein_per_100g: float = 2.7,
+    carb_per_100g: float = 28.0,
+    fat_per_100g: float = 0.3,
+    source: str = "ciqual",
+    updated_at: datetime | None = None,
+) -> Ingredient:
+    return Ingredient(
+        ciqual_code=ciqual_code,
+        name_fr=name_fr,
+        name_search=normalize_search(name_fr),
+        kcal_per_100g=kcal_per_100g,
+        protein_per_100g=protein_per_100g,
+        carb_per_100g=carb_per_100g,
+        fat_per_100g=fat_per_100g,
+        source=source,
+        updated_at=updated_at or datetime.now(UTC),
+    )
 
 
 class FakeRecipeRepository:
@@ -45,6 +70,16 @@ class FakeIngredientRepository:
 
     async def get(self, ciqual_code: str) -> Ingredient | None:
         return self.by_code.get(ciqual_code)
+
+    async def get_by_name(self, name_search: str) -> Ingredient | None:
+        for ingredient in self.by_code.values():
+            if ingredient.name_search == name_search:
+                return ingredient
+        return None
+
+    async def list_all(self, limit: int = 50, offset: int = 0) -> list[Ingredient]:
+        ordered = sorted(self.by_code.values(), key=lambda ingredient: ingredient.name_fr)
+        return ordered[offset : offset + limit]
 
     async def upsert_many(self, ingredients: Iterable[Ingredient]) -> int:
         changed = 0

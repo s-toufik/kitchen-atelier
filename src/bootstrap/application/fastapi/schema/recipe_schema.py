@@ -8,6 +8,7 @@ from kitchen_atelier.domain.recipe.recipe import Recipe
 class RecipeSchema(BaseModel):
     id: str
     title: str
+    course: str
     current_version_number: int
     created_at: datetime
     updated_at: datetime
@@ -17,6 +18,7 @@ class RecipeSchema(BaseModel):
         return cls(
             id=recipe.id,
             title=recipe.title,
+            course=recipe.course,
             current_version_number=recipe.current_version_number,
             created_at=recipe.created_at,
             updated_at=recipe.updated_at,

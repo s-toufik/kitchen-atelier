@@ -12,7 +12,11 @@ from pycraftcore.web_fastapi import actuator_router, create_app, detail_handler
 from bootstrap.application.fastapi.router.ingredient_router import ingredient_router
 from bootstrap.application.fastapi.router.recipe_router import recipe_router
 from kitchen_atelier.application.port.inbound.create_recipe_port import CreateRecipePort
+from kitchen_atelier.application.port.inbound.get_or_create_ingredient_port import (
+    GetOrCreateIngredientPort,
+)
 from kitchen_atelier.application.port.inbound.get_recipe_version_port import GetRecipeVersionPort
+from kitchen_atelier.application.port.inbound.list_ingredients_port import ListIngredientsPort
 from kitchen_atelier.application.port.inbound.list_recipe_versions_port import (
     ListRecipeVersionsPort,
 )
@@ -40,6 +44,8 @@ def create_fastapi_api(
     list_recipe_versions: Callable[[], ListRecipeVersionsPort],
     list_recipes: Callable[[], ListRecipesPort],
     search_ingredients: Callable[[], SearchIngredientsPort],
+    list_ingredients: Callable[[], ListIngredientsPort],
+    get_or_create_ingredient: Callable[[], GetOrCreateIngredientPort],
     actuator: Actuator,
     logger: Logger,
 ) -> FastAPI:
@@ -53,7 +59,7 @@ def create_fastapi_api(
                 list_recipe_versions,
                 list_recipes,
             ),
-            ingredient_router(search_ingredients),
+            ingredient_router(search_ingredients, list_ingredients, get_or_create_ingredient),
             actuator_router(actuator),
         ],
         lifespan=lambda: _logging_routes(lifespan, app, logger),

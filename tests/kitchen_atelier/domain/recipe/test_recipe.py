@@ -9,11 +9,11 @@ from kitchen_atelier.domain.recipe.recipe_version import RecipeVersion
 from kitchen_atelier.domain.recipe.unit import Unit
 
 
-def _draft(title: str = "Ratatouille") -> RecipeDraft:
+def _draft(title: str = "Ratatouille", course: str = "Main") -> RecipeDraft:
     return RecipeDraft(
         title=title,
         subtitle="",
-        course="Main",
+        course=course,
         portions=4,
         prep_time_minutes=20,
         cook_time_minutes=40,
@@ -38,6 +38,7 @@ def test_start_creates_version_one() -> None:
     recipe = Recipe.start("r1", version, now)
     assert recipe.current_version_number == 1
     assert recipe.title == "Ratatouille"
+    assert recipe.course == "Main"
 
 
 def test_start_rejects_a_version_that_is_not_number_one() -> None:
@@ -61,6 +62,20 @@ def test_with_new_version_advances_current_version_and_title() -> None:
     assert updated.current_version_number == 2
     assert updated.title == "Ratatouille (v2)"
     assert updated.updated_at == later
+
+
+def test_with_new_version_updates_the_course() -> None:
+    now = datetime.now(UTC)
+    first = RecipeVersion(recipe_id="r1", version_number=1, saved_at=now, draft=_draft())
+    recipe = Recipe.start("r1", first, now)
+
+    later = datetime.now(UTC)
+    second = RecipeVersion(
+        recipe_id="r1", version_number=2, saved_at=later, draft=_draft(course="Pastry")
+    )
+    updated = recipe.with_new_version(second, later)
+
+    assert updated.course == "Pastry"
 
 
 def test_with_new_version_rejects_skipping_a_version_number() -> None:

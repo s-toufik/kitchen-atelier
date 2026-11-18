@@ -13,7 +13,7 @@ from pycraftcore.repository.port import AsyncRepository
 from pymongo import MongoClient
 
 from bootstrap.di.base_di import BaseDI
-from kitchen_atelier.adapter.outbound.ciqual.ciqual_source import CiqualSource
+from kitchen_atelier.adapter.outbound.ingestion.http_ingredient_source import HttpIngredientSource
 from kitchen_atelier.adapter.outbound.mongo.recipe_repository import MongoRecipeRepository
 from kitchen_atelier.adapter.outbound.sql.ingredient_repository import SqlIngredientRepository
 from kitchen_atelier.application.port.outbound.ingredient_repository_port import (
@@ -57,6 +57,6 @@ class KitchenDI(BaseDI):
         return repository
 
     @cached_property
-    def _ciqual_source(self) -> CiqualSource:
+    def _ingredient_source(self) -> HttpIngredientSource:
         connector: ApiConnector = self._configuration.connector.api(CIQUAL_CONNECTOR)
-        return CiqualSource(connector, self._logging)
+        return HttpIngredientSource(connector, self._logging)

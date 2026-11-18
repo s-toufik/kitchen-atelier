@@ -31,6 +31,20 @@ class SqlIngredientRepository:
         )
         return _to_ingredient(rows[0]) if rows else None
 
+    async def get_by_name(self, name_search: str) -> Ingredient | None:
+        rows = await self._repository.execute(
+            f"SELECT {_COLUMNS} FROM {SCHEMA}.{TABLE} WHERE name_search = %s LIMIT 1",
+            (name_search,),
+        )
+        return _to_ingredient(rows[0]) if rows else None
+
+    async def list_all(self, limit: int = 50, offset: int = 0) -> list[Ingredient]:
+        rows = await self._repository.execute(
+            f"SELECT {_COLUMNS} FROM {SCHEMA}.{TABLE} ORDER BY name_fr LIMIT %s OFFSET %s",
+            (limit, offset),
+        )
+        return [_to_ingredient(row) for row in rows]
+
     async def upsert_many(self, ingredients: Iterable[Ingredient]) -> int:
         changed = 0
         for ingredient in ingredients:

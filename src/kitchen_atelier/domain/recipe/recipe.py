@@ -8,6 +8,7 @@ from kitchen_atelier.domain.recipe.recipe_version import RecipeVersion
 class Recipe:
     id: str
     title: str
+    course: str
     current_version_number: int
     created_at: datetime
     updated_at: datetime
@@ -27,6 +28,7 @@ class Recipe:
         return cls(
             id=recipe_id,
             title=first_version.title,
+            course=first_version.draft.course,
             current_version_number=1,
             created_at=created_at,
             updated_at=created_at,
@@ -42,6 +44,7 @@ class Recipe:
         return replace(
             self,
             title=version.title,
+            course=version.draft.course,
             current_version_number=version.version_number,
             updated_at=saved_at,
         )

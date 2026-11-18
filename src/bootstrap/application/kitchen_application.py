@@ -50,6 +50,8 @@ def create_kitchen_application(settings: ProcessSettings | None = None) -> ASGIA
         list_recipe_versions=lambda: container.list_recipe_versions,
         list_recipes=lambda: container.list_recipes,
         search_ingredients=lambda: container.search_ingredients,
+        list_ingredients=lambda: container.list_ingredients,
+        get_or_create_ingredient=lambda: container.get_or_create_ingredient,
         actuator=container.actuator,
         logger=container.logging,
     )
