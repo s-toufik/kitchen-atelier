@@ -1,0 +1,216 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+    # Only tags publish. A tag on main (vX.Y.Z): image toufik142/kitchen-atelier:X.Y.Z and :latest, chart kitchen-atelier:X.Y.Z
+    # A tag on develop (vX.Y.Z-rc.N): image toufik142/kitchen-atelier:X.Y.Z-rc.N and :dev, no chart
+    tags: ['v*.*.*']
+
+jobs:
+  lint:
+    name: 🧹 LINT
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/uv
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-deps-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip uv
+          uv sync --frozen
+
+      - name: Run ruff
+        run: |
+          uv run ruff check .
+
+  typecheck:
+    name: 🔍 TYPECHECK
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.14
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/uv
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-deps-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip uv
+          uv sync --frozen
+
+      - name: Run ty
+        run: |
+          uv run ty check
+
+  test:
+    name: 🧪 TEST
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.14
+    needs: typecheck
+    env:
+      # config/debug/connector/*.yml interpolates these; nothing here needs to
+      # be reachable for the test suite to pass (it mocks/stubs real I/O).
+      APP_ENV: debug
+      OTEL_HOST: localhost
+      OTEL_PORT: "4317"
+      TOOLBOX_URL: http://127.0.0.1:8001/mcp
+      USER_DB_HOST: /tmp/ci-toolbox
+      USER_DB_NAME: user
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/uv
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-deps-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip uv
+          uv sync --frozen
+
+      - name: Run tests
+        run: |
+          uv run pytest --maxfail=1 --disable-warnings
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: test-reports/
+
+  build:
+    name: 🐳 BUILD
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: devops/docker/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release:
+    name: 🏷️ RELEASE TARGET
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    outputs:
+      channel: ${{ steps.target.outputs.channel }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find the branch the tag is on
+        id: target
+        run: |
+          git fetch --no-tags origin \
+            +refs/heads/main:refs/remotes/origin/main \
+            +refs/heads/develop:refs/remotes/origin/develop
+          if git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            channel=release
+          elif git merge-base --is-ancestor "$GITHUB_SHA" origin/develop; then
+            channel=prerelease
+          else
+            echo "::error::$GITHUB_REF_NAME is on neither main nor develop: nothing is published"
+            exit 1
+          fi
+          final='^v[0-9]+\.[0-9]+\.[0-9]+$'
+          if [ "$channel" = release ] && ! [[ "$GITHUB_REF_NAME" =~ $final ]]; then
+            echo "::error::$GITHUB_REF_NAME is on main: a release is vX.Y.Z"
+            exit 1
+          fi
+          if [ "$channel" = prerelease ] && [[ "$GITHUB_REF_NAME" =~ $final ]]; then
+            echo "::error::$GITHUB_REF_NAME is only on develop: a pre-release is vX.Y.Z-rc.N"
+            exit 1
+          fi
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "::notice::$GITHUB_REF_NAME is a $channel"
+
+  publish:
+    name: 🚀 PUBLISH
+    runs-on: ubuntu-latest
+    needs: [build, release]
+    if: github.ref_type == 'tag'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Determine image tags
+        id: tag
+        env:
+          CHANNEL: ${{ needs.release.outputs.channel }}
+        run: |
+          image=toufik142/kitchen-atelier
+          version="${GITHUB_REF_NAME#v}"
+          if [ "$CHANNEL" = release ]; then
+            echo "tags=$image:$version,$image:latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "tags=$image:$version,$image:dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: devops/docker/Dockerfile
+          push: true
+          tags: ${{ steps.tag.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  chart:
+    name: 📦 CHART
+    needs: [publish, release]
+    if: needs.release.outputs.channel == 'release'
+    uses: s-toufik/kube-charts/.github/workflows/app-chart.yml@main
+    permissions:
+      contents: read
+      packages: write
+    with:
+      name: kitchen-atelier
+      image: toufik142/kitchen-atelier
