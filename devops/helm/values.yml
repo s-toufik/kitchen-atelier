@@ -17,7 +17,8 @@ env:
   DB_MONGO_HOST: mongodb
   DB_MONGO_PORT: "27017"
   DB_MONGO_DATABASE: kitchen
-  CIQUAL_DATASET_URL: "https://www.data.gouv.fr/fr/datasets/r/REPLACE-WITH-REAL-RESOURCE-ID"
+  CIQUAL_DATASET_URL: "https://www.data.gouv.fr/fr/datasets/r/bcdb7fec-875c-42aa-ba6e-460adf97aad3"
+  CIQUAL_FALLBACK_DATASET_URL: "https://zenodo.org/records/4770600/files/Table%20Ciqual%202020_FR_2020%2007%2007.xls?download=1"
 secretEnv:
   DB_POSTGRES_USERNAME: { secret: pg-role-kitchen-atelier, key: username }
   DB_POSTGRES_PASSWORD: { secret: pg-role-kitchen-atelier, key: password }
@@ -74,7 +75,8 @@ cronJobs:
       DB_MONGO_HOST: mongodb
       DB_MONGO_PORT: "27017"
       DB_MONGO_DATABASE: kitchen
-      CIQUAL_DATASET_URL: "https://www.data.gouv.fr/fr/datasets/r/REPLACE-WITH-REAL-RESOURCE-ID"
+      CIQUAL_DATASET_URL: "https://www.data.gouv.fr/fr/datasets/r/bcdb7fec-875c-42aa-ba6e-460adf97aad3"
+      CIQUAL_FALLBACK_DATASET_URL: "https://zenodo.org/records/4770600/files/Table%20Ciqual%202020_FR_2020%2007%2007.xls?download=1"
     secretEnv:
       DB_POSTGRES_USERNAME: { secret: pg-role-kitchen-atelier, key: username }
       DB_POSTGRES_PASSWORD: { secret: pg-role-kitchen-atelier, key: password }

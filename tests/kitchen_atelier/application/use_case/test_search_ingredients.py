@@ -8,7 +8,7 @@ async def test_normalizes_the_query_before_searching() -> None:
 
     results = await SearchIngredients(repository).handle("creme")
 
-    assert [ingredient.ciqual_code for ingredient in results] == ["1"]
+    assert [food.identity.ciqual_code for food in results] == ["1"]
 
 
 async def test_returns_nothing_for_a_blank_query() -> None:

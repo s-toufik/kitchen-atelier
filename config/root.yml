@@ -15,6 +15,7 @@ application_configuration:
       open_telemetry: ${connector.telemetry}
     api:
       ciqual: ${connector.ciqual}
+      ciqual_fallback: ${connector.ciqual_fallback}
 
   operation:
     ingredients: ${operation.ingredients}
