@@ -33,7 +33,7 @@ def ingredient_router(
 
     @router.get(INGREDIENTS_PATH)
     async def list_or_search(
-        query: str | None = Query(default=None),
+        query: str | None = Query(default=None, alias="q"),
         limit: int = Query(default=20, ge=1, le=200),
         offset: int = Query(default=0, ge=0),
     ) -> IngredientListSchema:
