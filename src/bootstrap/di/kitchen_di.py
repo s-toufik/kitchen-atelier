@@ -25,6 +25,7 @@ __all__ = ["KitchenDI"]
 INGREDIENTS_OPERATION: str = "ingredients"
 RECIPES_OPERATION: str = "recipes"
 CIQUAL_CONNECTOR: str = "ciqual"
+CIQUAL_FALLBACK_CONNECTOR: str = "ciqual_fallback"
 
 RECIPES_COLLECTION_ROLE: str = "recipes"
 VERSIONS_COLLECTION_ROLE: str = "versions"
@@ -59,4 +60,5 @@ class KitchenDI(BaseDI):
     @cached_property
     def _ingredient_source(self) -> HttpIngredientSource:
         connector: ApiConnector = self._configuration.connector.api(CIQUAL_CONNECTOR)
-        return HttpIngredientSource(connector, self._logging)
+        fallback: ApiConnector = self._configuration.connector.api(CIQUAL_FALLBACK_CONNECTOR)
+        return HttpIngredientSource(connector, self._logging, fallback_connector=fallback)

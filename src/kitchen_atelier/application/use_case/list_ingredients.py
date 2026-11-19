@@ -1,12 +1,12 @@
 from kitchen_atelier.application.port.outbound.ingredient_repository_port import (
     IngredientRepository,
 )
-from kitchen_atelier.domain.ingredient.ingredient import Ingredient
+from kitchen_atelier.domain.ingredient.food import Food
 
 
 class ListIngredients:
     def __init__(self, repository: IngredientRepository) -> None:
         self._repository = repository
 
-    async def handle(self, limit: int = 50, offset: int = 0) -> list[Ingredient]:
+    async def handle(self, limit: int = 50, offset: int = 0) -> list[Food]:
         return await self._repository.list_all(limit, offset)

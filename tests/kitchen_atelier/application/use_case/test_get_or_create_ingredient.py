@@ -1,4 +1,5 @@
 from kitchen_atelier.application.use_case.get_or_create_ingredient import GetOrCreateIngredient
+from kitchen_atelier.domain.ingredient.normalize_search import normalize_search
 from tests.support.fakes import FakeIngredientRepository, make_ingredient
 
 
@@ -25,11 +26,11 @@ async def test_creates_a_custom_ingredient_when_no_match_exists() -> None:
         fat_per_100g=0,
     )
 
-    assert result.name_fr == "Sel fumé"
-    assert result.name_search == "sel fume"
+    assert result.identity.name == "Sel fumé"
+    assert normalize_search(result.identity.name) == "sel fume"
     assert result.source == "custom"
-    assert result.ciqual_code.startswith("custom:")
-    assert repository.by_code[result.ciqual_code] == result
+    assert result.identity.ciqual_code.startswith("custom:")
+    assert repository.by_code[result.identity.ciqual_code] == result
 
 
 async def test_clamps_negative_macros_to_zero() -> None:
@@ -39,7 +40,7 @@ async def test_clamps_negative_macros_to_zero() -> None:
         "Eau", kcal_per_100g=-5, protein_per_100g=-1, carb_per_100g=-1, fat_per_100g=-1
     )
 
-    assert result.kcal_per_100g == 0
-    assert result.protein_per_100g == 0
-    assert result.carb_per_100g == 0
-    assert result.fat_per_100g == 0
+    assert result.nutrition.energy.regulation_1169_kcal == 0
+    assert result.nutrition.macronutrients.protein_jones_g == 0
+    assert result.nutrition.macronutrients.carbohydrates_g == 0
+    assert result.nutrition.macronutrients.fat_g == 0

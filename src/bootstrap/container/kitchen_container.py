@@ -11,6 +11,7 @@ from kitchen_atelier.application.port.outbound.ingredient_repository_port import
 )
 from kitchen_atelier.application.port.outbound.recipe_repository_port import RecipeRepository
 from kitchen_atelier.application.use_case.create_recipe import CreateRecipe
+from kitchen_atelier.application.use_case.get_ingredient import GetIngredient
 from kitchen_atelier.application.use_case.get_or_create_ingredient import GetOrCreateIngredient
 from kitchen_atelier.application.use_case.get_recipe_version import GetRecipeVersion
 from kitchen_atelier.application.use_case.list_ingredients import ListIngredients
@@ -76,6 +77,10 @@ class KitchenContainer(KitchenDI):
     @cached_property
     def list_ingredients(self) -> ListIngredients:
         return ListIngredients(_booted(self._ingredient_repository))
+
+    @cached_property
+    def get_ingredient(self) -> GetIngredient:
+        return GetIngredient(_booted(self._ingredient_repository))
 
     @cached_property
     def get_or_create_ingredient(self) -> GetOrCreateIngredient:

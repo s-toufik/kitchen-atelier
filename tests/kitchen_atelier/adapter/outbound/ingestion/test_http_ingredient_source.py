@@ -1,6 +1,7 @@
 import logging
 
 import httpx
+import pytest
 from openpyxl import Workbook
 from pycraftcore.application_configuration.enum.connector_type import ConnectorType
 from pycraftcore.application_configuration.model.connector import ApiConnector
@@ -65,8 +66,8 @@ async def test_fetches_and_maps_a_csv_dataset_in_cp1252() -> None:
     ingredients = await source.fetch_all()
 
     assert len(ingredients) == 1
-    assert ingredients[0].name_fr == "Pâtes, cuites"
-    assert ingredients[0].kcal_per_100g == 131
+    assert ingredients[0].identity.name == "Pâtes, cuites"
+    assert ingredients[0].nutrition.energy.regulation_1169_kcal == 131
 
 
 async def test_fetches_and_maps_an_xlsx_dataset() -> None:
@@ -93,8 +94,8 @@ async def test_fetches_and_maps_an_xlsx_dataset() -> None:
     ingredients = await source.fetch_all()
 
     assert len(ingredients) == 1
-    assert ingredients[0].ciqual_code == "20000"
-    assert ingredients[0].kcal_per_100g == 131
+    assert ingredients[0].identity.ciqual_code == "20000"
+    assert ingredients[0].nutrition.energy.regulation_1169_kcal == 131
 
 
 async def test_skips_the_fetch_when_no_url_is_configured() -> None:
@@ -108,6 +109,59 @@ async def test_returns_nothing_for_a_header_only_dataset() -> None:
     transport = _transport(csv_text.encode("utf-8"), "text/csv")
     source = HttpIngredientSource(
         _connector("https://example.test/dataset.csv"), logging.getLogger(__name__), transport=transport
+    )
+
+    assert await source.fetch_all() == []
+
+
+def _routed_transport(routes: dict[str, httpx.Response]) -> httpx.MockTransport:
+    def handler(request: httpx.Request) -> httpx.Response:
+        response = routes[str(request.url)]
+        response.request = request
+        return response
+
+    return httpx.MockTransport(handler)
+
+
+async def test_falls_back_when_the_primary_dataset_is_unreachable() -> None:
+    csv_text = ";".join(HEADER) + "\n" + "20000;Pâtes, cuites;131;5,0;25,0;1,1"
+    transport = _routed_transport(
+        {
+            "https://example.test/primary.csv": httpx.Response(503),
+            "https://example.test/fallback.csv": httpx.Response(
+                200, content=csv_text.encode("utf-8"), headers={"content-type": "text/csv"}
+            ),
+        }
+    )
+    source = HttpIngredientSource(
+        _connector("https://example.test/primary.csv"),
+        logging.getLogger(__name__),
+        fallback_connector=_connector("https://example.test/fallback.csv"),
+        transport=transport,
+    )
+
+    ingredients = await source.fetch_all()
+
+    assert len(ingredients) == 1
+    assert ingredients[0].identity.name == "Pâtes, cuites"
+
+
+async def test_raises_when_the_primary_fails_and_no_fallback_is_configured() -> None:
+    transport = _routed_transport({"https://example.test/primary.csv": httpx.Response(503)})
+    source = HttpIngredientSource(
+        _connector("https://example.test/primary.csv"), logging.getLogger(__name__), transport=transport
+    )
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await source.fetch_all()
+
+
+async def test_does_not_try_the_fallback_when_the_primary_is_simply_unconfigured() -> None:
+    source = HttpIngredientSource(
+        _connector(""),
+        logging.getLogger(__name__),
+        fallback_connector=_connector("https://example.test/fallback.csv"),
+        transport=_routed_transport({}),
     )
 
     assert await source.fetch_all() == []

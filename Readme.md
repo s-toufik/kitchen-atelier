@@ -25,7 +25,7 @@ make run
 | | Endpoint |
 |---|---|
 | Recipes | `GET/POST /v1/recipes`, `GET /v1/recipes/{id}/versions`, `GET/POST /v1/recipes/{id}/versions/{n}` |
-| Ingredients | `GET /v1/ingredients?q=...` |
+| Ingredients | `GET /v1/ingredients?q=...`, `GET /v1/ingredients/{ciqual_code}`, `POST /v1/ingredients` |
 | Health | `GET /actuator/health` (also `/health/liveness`, `/health/readiness`) |
 | Version | `GET /actuator/info` |
 

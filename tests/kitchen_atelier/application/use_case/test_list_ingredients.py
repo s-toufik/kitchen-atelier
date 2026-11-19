@@ -9,7 +9,7 @@ async def test_lists_ingredients_ordered_by_name() -> None:
 
     results = await ListIngredients(repository).handle()
 
-    assert [ingredient.name_fr for ingredient in results] == ["Ail", "Riz"]
+    assert [food.identity.name for food in results] == ["Ail", "Riz"]
 
 
 async def test_paginates_with_limit_and_offset() -> None:
@@ -20,4 +20,4 @@ async def test_paginates_with_limit_and_offset() -> None:
 
     results = await ListIngredients(repository).handle(limit=1, offset=1)
 
-    assert [ingredient.name_fr for ingredient in results] == ["Beurre"]
+    assert [food.identity.name for food in results] == ["Beurre"]

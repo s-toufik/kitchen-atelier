@@ -9,7 +9,7 @@ from pycraftcore.file_handler.adapter.handler import Handler
 from pycraftcore.logger.port import Logger
 
 from kitchen_atelier.adapter.outbound.ingestion.ciqual_row_mapper import CiqualRowMapper
-from kitchen_atelier.domain.ingredient.ingredient import Ingredient
+from kitchen_atelier.domain.ingredient.food import Food
 
 _SUPPORTED_EXTENSIONS: tuple[str, ...] = ("csv", "xlsx", "xls", "parquet")
 _TEXT_EXTENSIONS: tuple[str, ...] = ("csv",)
@@ -41,23 +41,36 @@ class HttpIngredientSource:
         connector: ApiConnector,
         logger: Logger,
         *,
+        fallback_connector: ApiConnector | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._connector = connector
+        self._fallback_connector = fallback_connector
         self._logger = logger
         self._transport = transport
 
-    async def fetch_all(self) -> list[Ingredient]:
+    async def fetch_all(self) -> list[Food]:
         if not self._connector.base_url.strip():
             self._logger.warning("Ingredient dataset URL is not configured; skipping fetch")
             return []
 
+        try:
+            return await self._fetch_from(self._connector)
+        except Exception as error:
+            if self._fallback_connector is None or not self._fallback_connector.base_url.strip():
+                raise
+            self._logger.warning(
+                f"Primary ingredient dataset unavailable ({error}); trying the fallback"
+            )
+            return await self._fetch_from(self._fallback_connector)
+
+    async def _fetch_from(self, connector: ApiConnector) -> list[Food]:
         async with httpx.AsyncClient(
-            timeout=self._connector.timeout,
+            timeout=connector.timeout,
             follow_redirects=True,
             transport=self._transport,
         ) as client:
-            response = await client.get(self._connector.base_url)
+            response = await client.get(connector.base_url)
             response.raise_for_status()
 
         extension = detect_extension(
@@ -81,7 +94,7 @@ class HttpIngredientSource:
             return []
 
         mapper = CiqualRowMapper(rows[0].keys())
-        ingredients: list[Ingredient] = []
+        ingredients: list[Food] = []
         for row in rows:
             ingredient = mapper.map_row(row, fetched_at)
             if ingredient is not None:
