@@ -20,7 +20,7 @@ COPY config ./config
 RUN cp -r config/debug config/deploy
 
 ENV PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH="/app/src" \
+    PYTHONPATH="/app:/app/src" \
     CONFIGURATION_DIR="/app/config" \
     GRANIAN_INTERFACE=asgi \
     GRANIAN_FACTORY=true \
