@@ -76,6 +76,12 @@ class FakeRecipeRepository:
         self.versions[(version.recipe_id, version.version_number)] = version
         self.recipes[recipe.id] = recipe
 
+    async def delete(self, recipe_id: str) -> None:
+        self.versions = {
+            key: version for key, version in self.versions.items() if key[0] != recipe_id
+        }
+        self.recipes.pop(recipe_id, None)
+
 
 class FakeIngredientRepository:
     def __init__(self) -> None:
