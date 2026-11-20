@@ -12,6 +12,7 @@ from bootstrap.application.fastapi.schema.save_recipe_version_request_schema imp
     SaveRecipeVersionRequestSchema,
 )
 from kitchen_atelier.application.port.inbound.create_recipe_port import CreateRecipePort
+from kitchen_atelier.application.port.inbound.delete_recipe_port import DeleteRecipePort
 from kitchen_atelier.application.port.inbound.get_recipe_version_port import GetRecipeVersionPort
 from kitchen_atelier.application.port.inbound.list_recipe_versions_port import (
     ListRecipeVersionsPort,
@@ -31,6 +32,7 @@ def recipe_router(
     get_recipe_version: Callable[[], GetRecipeVersionPort],
     list_recipe_versions: Callable[[], ListRecipeVersionsPort],
     list_recipes: Callable[[], ListRecipesPort],
+    delete_recipe: Callable[[], DeleteRecipePort],
 ) -> APIRouter:
     router = APIRouter(tags=[RECIPE_TAG])
 
@@ -61,5 +63,9 @@ def recipe_router(
     async def get_version(recipe_id: str, version_number: int) -> RecipeVersionSchema:
         version = await get_recipe_version().handle(recipe_id, version_number)
         return RecipeVersionSchema.from_domain(version)
+
+    @router.delete(RECIPES_PATH + "/{recipe_id}", status_code=204)
+    async def delete(recipe_id: str) -> None:
+        await delete_recipe().handle(recipe_id)
 
     return router

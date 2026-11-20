@@ -1,7 +1,9 @@
 from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse, Response
 from fastapi.routing import APIRoute, iter_route_contexts
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pycraftcore.logger.port import Logger
@@ -12,6 +14,7 @@ from pycraftcore.web_fastapi import actuator_router, create_app, detail_handler
 from bootstrap.application.fastapi.router.ingredient_router import ingredient_router
 from bootstrap.application.fastapi.router.recipe_router import recipe_router
 from kitchen_atelier.application.port.inbound.create_recipe_port import CreateRecipePort
+from kitchen_atelier.application.port.inbound.delete_recipe_port import DeleteRecipePort
 from kitchen_atelier.application.port.inbound.get_ingredient_port import GetIngredientPort
 from kitchen_atelier.application.port.inbound.get_or_create_ingredient_port import (
     GetOrCreateIngredientPort,
@@ -35,6 +38,13 @@ from kitchen_atelier.domain.recipe.exception.recipe_version_not_found import (
 from kitchen_atelier.domain.recipe.exception.stale_version import StaleVersion
 
 
+async def _validation_detail_handler(
+    _request: Request, exception: RequestValidationError
+) -> Response:
+    messages = [str(error["msg"]) for error in exception.errors()]
+    return JSONResponse({"detail": "; ".join(messages) or "Invalid request"}, status_code=422)
+
+
 def create_fastapi_api(
     api: ApiSettings,
     *,
@@ -44,6 +54,7 @@ def create_fastapi_api(
     get_recipe_version: Callable[[], GetRecipeVersionPort],
     list_recipe_versions: Callable[[], ListRecipeVersionsPort],
     list_recipes: Callable[[], ListRecipesPort],
+    delete_recipe: Callable[[], DeleteRecipePort],
     search_ingredients: Callable[[], SearchIngredientsPort],
     list_ingredients: Callable[[], ListIngredientsPort],
     get_or_create_ingredient: Callable[[], GetOrCreateIngredientPort],
@@ -60,6 +71,7 @@ def create_fastapi_api(
                 get_recipe_version,
                 list_recipe_versions,
                 list_recipes,
+                delete_recipe,
             ),
             ingredient_router(
                 search_ingredients, list_ingredients, get_or_create_ingredient, get_ingredient
@@ -71,6 +83,7 @@ def create_fastapi_api(
             RecipeNotFound: detail_handler(404),
             RecipeVersionNotFound: detail_handler(404),
             StaleVersion: detail_handler(409),
+            RequestValidationError: _validation_detail_handler,
         },
     )
     FastAPIInstrumentor.instrument_app(

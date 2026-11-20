@@ -60,3 +60,7 @@ class MongoRecipeRepository:
             recipe_to_document(recipe),
             upsert=True,
         )
+
+    async def delete(self, recipe_id: str) -> None:
+        await asyncio.to_thread(self._versions.delete_many, {"recipe_id": recipe_id})
+        await asyncio.to_thread(self._recipes.delete_one, {"_id": recipe_id})
